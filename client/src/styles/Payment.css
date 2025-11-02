@@ -1,0 +1,202 @@
+/* Payment Form */
+.payment-form {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.payment-header {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-align: center;
+}
+
+.payment-header h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.payment-header p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.payment-summary {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.payment-summary h4 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: between;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.summary-item.total {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.payment-details {
+  padding: 1.5rem;
+}
+
+.card-element-container {
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  transition: border-color 0.3s ease;
+}
+
+.card-element-container:focus-within {
+  border-color: #3498db;
+}
+
+.StripeElement {
+  width: 100%;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.payment-actions .btn {
+  flex: 1;
+}
+
+.payment-security {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+}
+
+.security-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.payment-methods {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.card-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Payment Steps */
+.payment-step {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.step-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.step-header h2 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.step-header p {
+  color: #666;
+}
+
+.success-step {
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.success-content {
+  background: white;
+  padding: 3rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.success-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.success-content h2 {
+  color: #27ae60;
+  margin-bottom: 1rem;
+}
+
+.success-content p {
+  color: #666;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.appointment-details {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.appointment-details h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: between;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.success-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.redirect-message {
+  color: #999;
+  font-size: 0.9rem;
+  font-style: italic;
+}
