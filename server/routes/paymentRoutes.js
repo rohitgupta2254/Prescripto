@@ -14,6 +14,7 @@ router.use(protect);
 
 router.post('/create-intent', createPaymentIntent);
 router.post('/confirm', confirmPayment);
+router.post('/upi', require('../controllers/paymentController').payWithUPI);
 router.get('/history', getPaymentHistory);
 router.get('/appointment/:appointmentId', getPaymentByAppointment);
 

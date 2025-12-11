@@ -293,6 +293,44 @@
   width: 100%;
 }
 
+/* Buttons that show a spinner should not shift layout when switching label <-> spinner */
+.btn-no-shift {
+  position: relative; /* container for absolute spinner */
+  box-sizing: border-box; /* keep padding/border stable */
+  /* ensure a stable footprint even when label is hidden */
+  min-height: 44px; /* fixed minimum height; adjusts to match most buttons */
+  min-width: 140px; /* reasonable minimum width for action buttons */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem; /* mirror .btn defaults */
+  overflow: visible;
+}
+
+.btn-no-shift.btn-full {
+  min-width: unset; /* full width overrides min-width */
+}
+
+.btn-no-shift .btn-label {
+  display: inline-block;
+  transition: visibility 0.05s linear; /* instant visibility change, no layout shift */
+}
+
+.btn-no-shift .btn-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none; /* don't block clicks when visible */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-no-shift .btn-spinner .loading-spinner {
+  margin: 0; /* remove extra spacing inside overlay */
+}
+
 /* Form Styles */
 .form-group {
   margin-bottom: 1.5rem;

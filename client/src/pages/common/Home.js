@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect }  from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/Common.css';
@@ -6,6 +6,9 @@ import '../../styles/Common.css';
 const Home = () => {
   const { currentUser } = useAuth();
 
+    useEffect(() => {
+    console.log("Home: currentUser ->", currentUser);
+  }, [currentUser]);
   return (
     <div className="home-page">
       {/* Hero Section */}

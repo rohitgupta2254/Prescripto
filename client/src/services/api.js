@@ -82,6 +82,7 @@ export const patientAPI = {
 export const paymentAPI = {
   createPaymentIntent: (data) => api.post('/payments/create-intent', data),
   confirmPayment: (data) => api.post('/payments/confirm', data),
+  payWithUPI: (data) => api.post('/payments/upi', data),
   getPaymentHistory: () => api.get('/payments/history'),
   getPaymentByAppointment: (appointmentId) => 
     api.get(`/payments/appointment/${appointmentId}`),

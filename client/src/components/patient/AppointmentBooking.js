@@ -3,6 +3,7 @@ import DatePicker from 'react-datepicker';
 import { patientAPI } from '../../services/api';
 import { CONSULTATION_TYPES } from '../../utils/constants';
 import { validateAppointment } from '../../utils/validation';
+import { generateTimeSlots } from '../../utils/helpers';
 import SlotSelector from './SlotSelector';
 import LoadingSpinner from '../common/LoadingSpinner';
 import '../../styles/Patient.css';
@@ -12,6 +13,8 @@ import '../../styles/DatePicker.css';
 const AppointmentBooking = ({ doctor, onBookingSuccess }) => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
+  const [allSlots, setAllSlots] = useState([]);
+  const [timing, setTiming] = useState(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState('');
@@ -40,24 +43,53 @@ const AppointmentBooking = ({ doctor, onBookingSuccess }) => {
 
   useEffect(() => {
     if (selectedDate) {
-      const formattedDate = selectedDate.toISOString().split('T')[0];
+      // Format date as YYYY-MM-DD using local date components to avoid timezone shifts
+      const pad = (n) => String(n).padStart(2, '0');
+      const formattedDate = `${selectedDate.getFullYear()}-${pad(selectedDate.getMonth() + 1)}-${pad(selectedDate.getDate())}`;
       setFormData(prev => ({ ...prev, appointment_date: formattedDate }));
       fetchAvailableSlots(selectedDate);
     }
   }, [selectedDate]);
 
+  // Poll for availability every 10 seconds while a date is selected
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    const interval = setInterval(() => {
+      fetchAvailableSlots(selectedDate);
+    }, 10000); // every 10s
+
+    return () => clearInterval(interval);
+  }, [selectedDate]);
+
   const fetchAvailableSlots = async (date) => {
-    const dateString = date.toISOString().split('T')[0];
+    // Use local date components to produce YYYY-MM-DD (avoid toISOString timezone conversion)
+    const pad = (n) => String(n).padStart(2, '0');
+    const dateString = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
     setLoadingSlots(true);
     setError('');
 
     try {
       const response = await patientAPI.getAvailableSlots(doctor.id, dateString);
-      setAvailableSlots(response.data.data.slots || []);
+      const resSlots = response.data.data.slots || [];
+      const resTiming = response.data.data.timing || null;
+      setAvailableSlots(resSlots);
+      setTiming(resTiming);
+
+      // Compute all slots for the day based on timing
+      if (resTiming && resTiming.start_time && resTiming.end_time) {
+        const interval = resTiming.slot_duration || 30;
+        const generated = generateTimeSlots(resTiming.start_time, resTiming.end_time, interval);
+        setAllSlots(generated);
+      } else {
+        setAllSlots(resSlots);
+      }
       setFormData(prev => ({ ...prev, appointment_date: dateString }));
     } catch (err) {
       setError('Failed to fetch available slots');
       setAvailableSlots([]);
+      setAllSlots([]);
+      setTiming(null);
     } finally {
       setLoadingSlots(false);
     }
@@ -196,7 +228,8 @@ const AppointmentBooking = ({ doctor, onBookingSuccess }) => {
                 <LoadingSpinner text="Loading available slots..." size="small" />
               ) : availableSlots.length > 0 ? (
                 <SlotSelector
-                  slots={availableSlots}
+                  allSlots={allSlots}
+                  availableSlots={availableSlots}
                   selectedSlot={formData.appointment_time}
                   onSelectSlot={handleTimeSelect}
                   error={errors.appointment_time}
@@ -229,9 +262,14 @@ const AppointmentBooking = ({ doctor, onBookingSuccess }) => {
           <button 
             type="submit" 
             disabled={booking || !formData.appointment_time}
-            className="btn btn-primary btn-large"
+            className="btn btn-primary btn-large btn-no-shift"
           >
-            {booking ? 'Booking...' : `Book Appointment - $${doctor.fees}`}
+            <span className="btn-label" style={{ visibility: booking ? 'hidden' : 'visible' }}>{`Book Appointment - $${doctor.fees}`}</span>
+            {booking && (
+              <div className="btn-spinner">
+                <LoadingSpinner size="small" text="" />
+              </div>
+            )}
           </button>
         </div>
       </form>

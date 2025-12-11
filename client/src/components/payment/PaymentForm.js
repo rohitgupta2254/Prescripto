@@ -12,16 +12,35 @@ const CheckoutForm = ({ appointment, doctor, onSuccess, onCancel }) => {
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [upiId, setUpiId] = useState('test@oksbi');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
-    if (!stripe || !elements) {
+    setLoading(true);
+    setError('');
+
+    // If UPI selected, call backend UPI endpoint to mark payment completed (test)
+    if (paymentMethod === 'upi') {
+      try {
+        // Use our UPI testing endpoint — expects appointment id, amount and upiId
+        await paymentAPI.payWithUPI({ appointmentId: appointment.id, amount: doctor.fees, upiId });
+        onSuccess();
+      } catch (err) {
+        setError(err.response?.data?.message || 'UPI payment failed.');
+      } finally {
+        setLoading(false);
+      }
+
       return;
     }
 
-    setLoading(true);
-    setError('');
+    // For card payments ensure Stripe is ready
+    if (!stripe || !elements) {
+      setError('Payment gateway not ready. Please try again in a moment.');
+      setLoading(false);
+      return;
+    }
 
     try {
       // Create payment intent
@@ -89,25 +108,53 @@ const CheckoutForm = ({ appointment, doctor, onSuccess, onCancel }) => {
 
       <form onSubmit={handleSubmit} className="payment-details">
         <div className="form-group">
-          <label className="form-label">Card Details</label>
-          <div className="card-element-container">
-            <CardElement
-              options={{
-                style: {
-                  base: {
-                    fontSize: '16px',
-                    color: '#424770',
-                    '::placeholder': {
-                      color: '#aab7c4',
-                    },
-                    padding: '10px 12px',
-                  },
-                },
-                hidePostalCode: true,
-              }}
-            />
+          <label className="form-label">Payment Method</label>
+          <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
+            <label>
+              <input type="radio" name="pm" value="card" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} /> Card
+            </label>
+            <label>
+              <input type="radio" name="pm" value="upi" checked={paymentMethod === 'upi'} onChange={() => setPaymentMethod('upi')} /> UPI (test)
+            </label>
           </div>
         </div>
+
+        {paymentMethod === 'upi' && (
+          <div className="form-group">
+            <label className="form-label">UPI ID</label>
+            <input
+              type="text"
+              value={upiId}
+              onChange={(e) => setUpiId(e.target.value)}
+              className="form-input"
+              placeholder="example@bank"
+            />
+            <small className="form-help">Use a test UPI ID (e.g., test@oksbi) for local testing.</small>
+          </div>
+        )}
+
+        {paymentMethod === 'card' && (
+          <div className="form-group">
+            <label className="form-label">Card Details</label>
+            <div className="card-element-container">
+              <CardElement
+                options={{
+                  style: {
+                    base: {
+                      fontSize: '16px',
+                      color: '#424770',
+                      '::placeholder': {
+                        color: '#aab7c4',
+                      },
+                      padding: '10px 12px',
+                    },
+                  },
+                  hidePostalCode: true,
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {error && <div className="error-message">{error}</div>}
 
@@ -122,10 +169,15 @@ const CheckoutForm = ({ appointment, doctor, onSuccess, onCancel }) => {
           </button>
           <button 
             type="submit" 
-            disabled={!stripe || loading}
-            className="btn btn-primary"
+            disabled={(paymentMethod === 'card' ? !stripe : false) || loading}
+            className="btn btn-primary btn-no-shift"
           >
-            {loading ? <LoadingSpinner size="small" text="" /> : `Pay $${doctor.fees}`}
+            <span className="btn-label" style={{ visibility: loading ? 'hidden' : 'visible' }}>{`Pay $${doctor.fees}`}</span>
+            {loading && (
+              <div className="btn-spinner">
+                <LoadingSpinner size="small" text="" />
+              </div>
+            )}
           </button>
         </div>
       </form>

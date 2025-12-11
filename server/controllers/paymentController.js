@@ -3,6 +3,8 @@ const PaymentService = require('../services/paymentService');
 const EmailService = require('../services/emailService');
 const db = require('../config/database');
 
+const isMockMode = process.env.SKIP_PAYMENT_TEST === "true";
+
 // Create payment intent
 exports.createPaymentIntent = async (req, res) => {
   try {
@@ -46,6 +48,68 @@ exports.createPaymentIntent = async (req, res) => {
   }
 };
 
+// UPI (mock/test) payment handler — allows testing UPI payments locally
+exports.payWithUPI = async (req, res) => {
+  try {
+    const { appointmentId, amount, upiId } = req.body;
+
+    if (!appointmentId || !amount || !upiId) {
+      return res.status(400).json({ success: false, message: 'appointmentId, amount and upiId are required' });
+    }
+
+    // Verify appointment belongs to patient
+    const [appointmentRows] = await db.execute(
+      'SELECT * FROM appointments WHERE id = ? AND patient_id = ?',
+      [appointmentId, req.user.id]
+    );
+
+    if (appointmentRows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+
+    // Create a payment record and mark as completed (test mode)
+    const transactionId = `upi_${Date.now()}`;
+
+    const Payment = require('../models/Payment');
+    await Payment.create({
+      appointment_id: appointmentId,
+      amount,
+      payment_method: 'upi',
+      transaction_id: transactionId,
+      status: 'completed'
+    });
+
+    // Update appointment status to scheduled
+    await db.execute('UPDATE appointments SET status = "scheduled" WHERE id = ?', [appointmentId]);
+
+    // Send payment receipt email (best-effort)
+    const [appointmentData] = await db.execute(
+      `SELECT a.*, p.name as patient_name, p.email as patient_email, 
+              d.name as doctor_name, d.specialization, d.fees
+       FROM appointments a
+       INNER JOIN patients p ON a.patient_id = p.id
+       INNER JOIN doctors d ON a.doctor_id = d.id
+       WHERE a.id = ?`,
+      [appointmentId]
+    );
+
+    const payment = await Payment.findByAppointmentId(appointmentId);
+
+    if (appointmentData.length > 0 && payment) {
+      EmailService.sendPaymentReceipt(
+        payment,
+        appointmentData[0],
+        { name: appointmentData[0].patient_name, email: appointmentData[0].patient_email },
+        { name: appointmentData[0].doctor_name }
+      ).catch(err => console.error('Failed to send payment receipt:', err));
+    }
+
+    res.json({ success: true, data: { paymentId: payment.id || payment.transaction_id || transactionId }, message: 'UPI payment (test) completed' });
+  } catch (error) {
+    console.error('UPI payment error:', error);
+    res.status(500).json({ success: false, message: 'Server error during UPI payment' });
+  }
+};
 // Confirm payment
 exports.confirmPayment = async (req, res) => {
   try {

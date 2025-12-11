@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { authAPI } from '../services/api';
+import { getUserRole } from '../services/auth';
 
 const AuthContext = createContext();
 
@@ -43,8 +44,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (userData) => {
     try {
-      setCurrentUser(userData);
-      localStorage.setItem('prescripto_token', userData.token);
+      // Persist token first so helper can read it
+      if (userData.token) {
+        localStorage.setItem('prescripto_token', userData.token);
+      }
+
+      // Ensure currentUser includes role immediately (backend login may not include role)
+      const role = userData.role || getUserRole();
+      setCurrentUser({ ...userData, role });
       setError('');
       return { success: true };
     } catch (err) {

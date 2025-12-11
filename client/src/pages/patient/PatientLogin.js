@@ -93,9 +93,14 @@ const PatientLogin = () => {
             <button 
               type="submit" 
               disabled={loading}
-              className="btn btn-primary btn-large btn-full"
+              className="btn btn-primary btn-large btn-full btn-no-shift"
             >
-              {loading ? <LoadingSpinner size="small" text="" /> : 'Sign In'}
+              <span className="btn-label" style={{ visibility: loading ? 'hidden' : 'visible' }}>Sign In</span>
+              {loading && (
+                <div className="btn-spinner">
+                  <LoadingSpinner size="small" text="" />
+                </div>
+              )}
             </button>
           </form>
 

@@ -85,7 +85,7 @@ class Appointment {
     );
 
     if (timings.length === 0) {
-      return [];
+      return { slots: [], timing: null, bookedTimes: [] };
     }
 
     const timing = timings[0];
@@ -97,7 +97,12 @@ class Appointment {
       [doctorId, date]
     );
 
-    const bookedTimes = bookedAppointments.map(apt => apt.appointment_time);
+    // Normalize booked times to "HH:MM" so they match generated timeString format
+    const bookedTimes = bookedAppointments.map(apt => {
+      // appointment_time may be stored as "HH:MM:SS" or "HH:MM"
+      if (!apt.appointment_time) return '';
+      return apt.appointment_time.slice(0,5);
+    });
 
     // Generate available slots
     const availableSlots = [];
@@ -116,7 +121,7 @@ class Appointment {
       currentTime.setMinutes(currentTime.getMinutes() + slotDuration);
     }
 
-    return availableSlots;
+    return { slots: availableSlots, timing: { start_time: timing.start_time, end_time: timing.end_time, slot_duration: slotDuration }, bookedTimes };
   }
 
   static async checkSlotAvailability(doctorId, date, time) {

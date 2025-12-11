@@ -81,12 +81,15 @@ exports.getAvailableSlots = async (req, res) => {
       });
     }
 
-    const slots = await Appointment.getAvailableSlots(doctorId, date);
+    const result = await Appointment.getAvailableSlots(doctorId, date);
 
+    // result: { slots: [...], timing: { start_time, end_time, slot_duration }, bookedTimes: [...] }
     res.json({
       success: true,
       data: {
-        slots,
+        slots: result.slots,
+        timing: result.timing,
+        bookedTimes: result.bookedTimes,
         date
       }
     });
