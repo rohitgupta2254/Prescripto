@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppointments } from '../../hooks/useAppointments';
+import { doctorAPI } from '../../services/api';
 import { formatDate, formatTime } from '../../utils/helpers';
 import ReviewModal from '../common/ReviewModal';
+import CancellationModal from '../common/CancellationModal';
 import '../../styles/Patient.css';
 
 const PatientAppointments = () => {
   const [statusFilter, setStatusFilter] = useState('scheduled');
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showCancellationModal, setShowCancellationModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [consultationDetails, setConsultationDetails] = useState({});
+  const [loadingDetails, setLoadingDetails] = useState({});
   
   const { 
     appointments, 
@@ -17,17 +22,39 @@ const PatientAppointments = () => {
     refetch 
   } = useAppointments('patient', statusFilter);
 
-  const handleCancelAppointment = async (appointmentId) => {
-    if (!window.confirm('Are you sure you want to cancel this appointment?')) {
-      return;
-    }
+  // Load consultation details for completed appointments
+  useEffect(() => {
+    const loadConsultationDetails = async () => {
+      const completedAppointments = appointments.filter(a => a.status === 'completed');
+      
+      for (const appointment of completedAppointments) {
+        if (!consultationDetails[appointment.id]) {
+          setLoadingDetails(prev => ({ ...prev, [appointment.id]: true }));
+          try {
+            const response = await doctorAPI.getConsultationDetails(appointment.id);
+            if (response.data.data) {
+              setConsultationDetails(prev => ({
+                ...prev,
+                [appointment.id]: response.data.data
+              }));
+            }
+          } catch (err) {
+            console.error(`Failed to load consultation details for appointment ${appointment.id}`);
+          } finally {
+            setLoadingDetails(prev => ({ ...prev, [appointment.id]: false }));
+          }
+        }
+      }
+    };
 
-    const result = await cancelAppointment(appointmentId);
-    if (result.success) {
-      alert('Appointment cancelled successfully');
-    } else {
-      alert(result.error);
+    if (appointments.length > 0) {
+      loadConsultationDetails();
     }
+  }, [appointments, consultationDetails]);
+
+  const handleCancelAppointment = (appointment) => {
+    setSelectedAppointment(appointment);
+    setShowCancellationModal(true);
   };
 
   const handleReview = (appointment) => {
@@ -37,6 +64,12 @@ const PatientAppointments = () => {
 
   const handleReviewSubmitted = () => {
     setShowReviewModal(false);
+    setSelectedAppointment(null);
+    refetch();
+  };
+
+  const handleCancellationSubmitted = () => {
+    setShowCancellationModal(false);
     setSelectedAppointment(null);
     refetch();
   };
@@ -54,11 +87,64 @@ const PatientAppointments = () => {
   };
 
   const canCancel = (appointmentDate, appointmentTime) => {
-    const appointmentDateTime = new Date(`${appointmentDate}T${appointmentTime}`);
-    const now = new Date();
-    const timeDiff = appointmentDateTime - now;
-    const hoursDiff = timeDiff / (1000 * 60 * 60);
-    return hoursDiff >= 2; // Can cancel if more than 2 hours before
+    try {
+      // Normalize date format to YYYY-MM-DD
+      let dateStr = appointmentDate;
+      
+      if (dateStr.includes('/')) {
+        // Handle DD/MM/YYYY format (if backend returns this way)
+        const parts = dateStr.split('/');
+        if (parts[2].length === 4) {
+          dateStr = `${parts[2]}-${String(parts[0]).padStart(2, '0')}-${String(parts[1]).padStart(2, '0')}`;
+        }
+      } else if (dateStr.includes('-')) {
+        // Ensure YYYY-MM-DD format
+        const parts = dateStr.split('-');
+        if (parts[0].length === 2) {
+          // It's DD-MM-YYYY, convert to YYYY-MM-DD
+          dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+      }
+      
+      // Normalize time format to HH:MM:SS
+      let timeStr = appointmentTime || '00:00:00';
+      timeStr = String(timeStr).trim();
+      
+      if (timeStr.length === 5 && timeStr.includes(':')) {
+        // Add seconds if not present (HH:MM -> HH:MM:00)
+        timeStr = `${timeStr}:00`;
+      }
+      
+      // Create date in local timezone to avoid timezone issues
+      const [year, month, day] = dateStr.split('-');
+      const [hours, minutes, seconds] = timeStr.split(':');
+      
+      const appointmentDateTime = new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+        parseInt(hours),
+        parseInt(minutes),
+        parseInt(seconds) || 0
+      );
+      
+      const now = new Date();
+      const timeDiff = appointmentDateTime - now;
+      const hoursDiff = timeDiff / (1000 * 60 * 60);
+      
+      console.log('Debug - Appointment:', {
+        dateStr,
+        timeStr,
+        appointmentDateTime: appointmentDateTime.toLocaleString(),
+        now: now.toLocaleString(),
+        hoursDiff: hoursDiff.toFixed(2)
+      });
+      
+      return hoursDiff >= 2; // Can cancel if more than 2 hours before
+    } catch (error) {
+      console.error('Error calculating canCancel:', error, { appointmentDate, appointmentTime });
+      return false; // Default to not cancellable if there's an error
+    }
   };
 
   const canReview = (appointment) => {
@@ -157,24 +243,65 @@ const PatientAppointments = () => {
                     <span className="value">{appointment.doctor_address}</span>
                   </div>
                 )}
+
+                {appointment.status === 'completed' && consultationDetails[appointment.id] && (
+                  <div className="consultation-details-section">
+                    <h4>📋 Consultation Details</h4>
+                    
+                    {consultationDetails[appointment.id].medicines && (
+                      <div className="detail-item full-width">
+                        <span className="label">Prescribed Medicines:</span>
+                        <div className="medicines-list">
+                          {consultationDetails[appointment.id].medicines.split('\n').map((medicine, idx) => (
+                            <div key={idx} className="medicine-item">
+                              💊 {medicine}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {consultationDetails[appointment.id].notes && (
+                      <div className="detail-item full-width">
+                        <span className="label">Doctor's Notes:</span>
+                        <span className="value">{consultationDetails[appointment.id].notes}</span>
+                      </div>
+                    )}
+
+                    {consultationDetails[appointment.id].follow_up_date && (
+                      <div className="detail-item full-width">
+                        <span className="label">Follow-up Appointment:</span>
+                        <div className="follow-up-section">
+                          <p><strong>📅 Date:</strong> {new Date(consultationDetails[appointment.id].follow_up_date).toLocaleDateString()}</p>
+                          <p><strong>📆 Days:</strong> {consultationDetails[appointment.id].follow_up_days} days from consultation</p>
+                          {consultationDetails[appointment.id].follow_up_reason && (
+                            <p><strong>📝 Reason:</strong> {consultationDetails[appointment.id].follow_up_reason}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="appointment-actions">
                 {appointment.status === 'scheduled' && (
-                  <>
+                  <div className="action-group">
                     {canCancel(appointment.appointment_date, appointment.appointment_time) ? (
                       <button
-                        onClick={() => handleCancelAppointment(appointment.id)}
-                        className="btn btn-danger"
+                        onClick={() => handleCancelAppointment(appointment)}
+                        className="btn btn-cancel-appointment"
+                        title="Cancel this appointment (must be at least 2 hours before appointment time)"
                       >
-                        Cancel Appointment
+                        🚫 Cancel Appointment
                       </button>
                     ) : (
-                      <span className="cancel-disabled">
-                        Cannot cancel within 2 hours of appointment
-                      </span>
+                      <div className="cancel-info-badge">
+                        <span className="cancel-icon">⏱️</span>
+                        <span className="cancel-text">Cannot cancel within 2 hours</span>
+                      </div>
                     )}
-                  </>
+                  </div>
                 )}
 
                 {canReview(appointment) && (
@@ -182,12 +309,12 @@ const PatientAppointments = () => {
                     onClick={() => handleReview(appointment)}
                     className="btn btn-primary"
                   >
-                    Write Review
+                    ⭐ Write Review
                   </button>
                 )}
 
                 {appointment.status === 'completed' && appointment.reviewed && (
-                  <span className="reviewed-badge">Reviewed</span>
+                  <span className="reviewed-badge">✓ Reviewed</span>
                 )}
               </div>
             </div>
@@ -204,6 +331,14 @@ const PatientAppointments = () => {
           }}
           onClose={() => setShowReviewModal(false)}
           onReviewSubmitted={handleReviewSubmitted}
+        />
+      )}
+
+      {showCancellationModal && selectedAppointment && (
+        <CancellationModal
+          appointment={selectedAppointment}
+          onClose={() => setShowCancellationModal(false)}
+          onSubmitted={handleCancellationSubmitted}
         />
       )}
     </div>

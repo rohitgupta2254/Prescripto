@@ -7,7 +7,9 @@ const {
   addTiming,
   getTimings,
   deleteTiming,
-  getDashboardStats
+  getDashboardStats,
+  completeAppointmentWithDetails,
+  getConsultationDetails
 } = require('../controllers/doctorController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -28,6 +30,13 @@ router.route('/appointments')
 
 router.route('/appointments/:appointmentId/status')
   .put(updateAppointmentStatus);
+
+// Consultation details routes
+router.route('/appointments/:appointmentId/complete')
+  .post(completeAppointmentWithDetails);
+
+router.route('/appointments/:appointmentId/consultation')
+  .get(getConsultationDetails);
 
 // Timing routes
 router.route('/timings')

@@ -1,0 +1,614 @@
+/* Cancellation and Modal Styles */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.success-message {
+  text-align: center;
+  padding: 20px;
+  background: #d4edda;
+  border: 1px solid #28a745;
+  border-radius: 4px;
+  color: #155724;
+}
+
+.success-message h3 {
+  margin: 0 0 10px 0;
+  color: #28a745;
+}
+
+.success-message p {
+  margin: 8px 0;
+}
+
+.appointment-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.appointment-info h4 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+
+.appointment-info p {
+  margin: 5px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.2);
+}
+
+.form-group textarea:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.info-box {
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  padding: 15px;
+  border-radius: 4px;
+  margin: 20px 0;
+  font-size: 14px;
+  color: #1565c0;
+}
+
+.error-message {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 15px 0;
+  font-size: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.modal-actions .btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.modal-actions .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #218838;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+/* Cancellation Requests Panel */
+
+.cancellation-requests-panel {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #3498db;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #333;
+}
+
+.badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-count {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.request-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  background: #f9f9f9;
+  transition: all 0.3s;
+}
+
+.request-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #3498db;
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.patient-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.patient-contact {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.refund-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.refund-amount {
+  font-size: 18px;
+  font-weight: bold;
+  color: #28a745;
+}
+
+.request-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.appointment-details {
+  margin: 10px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.appointment-details p {
+  margin: 5px 0;
+}
+
+.cancellation-reason {
+  background: white;
+  padding: 10px;
+  border-left: 3px solid #ff9800;
+  margin: 10px 0;
+  border-radius: 2px;
+}
+
+.cancellation-reason p:first-child {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.reason-text {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+  font-style: italic;
+}
+
+.request-actions {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.action-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-form textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  resize: vertical;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.action-buttons .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Revenue Summary */
+
+.revenue-summary-panel {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.revenue-summary-panel h2 {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  color: #333;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 10px;
+}
+
+.revenue-cards {
+  margin-bottom: 30px;
+}
+
+.revenue-section {
+  margin-bottom: 30px;
+}
+
+.revenue-section h3 {
+  font-size: 18px;
+  color: #333;
+  margin: 0 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.stat-card {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.stat-card.highlight {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+.stat-card.highlight .stat-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+  margin: 10px 0;
+}
+
+.stat-card.highlight .stat-value {
+  color: white;
+}
+
+.stat-value.net {
+  color: #28a745;
+}
+
+.stat-card.highlight .stat-value.net {
+  color: white;
+}
+
+.stat-value.refund {
+  color: #dc3545;
+}
+
+.stat-detail {
+  font-size: 12px;
+  color: #999;
+}
+
+.stat-card.highlight .stat-detail {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-detail .completed {
+  display: block;
+  color: #28a745;
+  font-weight: 600;
+}
+
+.stat-detail .cancelled {
+  display: block;
+  color: #dc3545;
+  margin-top: 3px;
+}
+
+/* Revenue Breakdown */
+
+.revenue-breakdown {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.revenue-breakdown h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.breakdown-chart {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.breakdown-row:last-child {
+  border-bottom: none;
+}
+
+.breakdown-row.negative {
+  background: #fff5f5;
+  color: #dc3545;
+}
+
+.breakdown-row.total {
+  background: #f0f7ff;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.breakdown-row.info {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.breakdown-label {
+  flex: 1;
+}
+
+.breakdown-value {
+  text-align: right;
+  font-weight: 600;
+}
+
+.breakdown-row.negative .breakdown-value {
+  color: #dc3545;
+}
+
+.breakdown-row.total .breakdown-value {
+  color: #667eea;
+}
+
+.breakdown-row.info .breakdown-value {
+  color: #15803d;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .request-header {
+    flex-direction: column;
+  }
+
+  .refund-info {
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+    border-bottom: none;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons .btn {
+    min-width: auto;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+  }
+}

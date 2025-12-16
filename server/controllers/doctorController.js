@@ -289,3 +289,118 @@ exports.getDashboardStats = async (req, res) => {
     });
   }
 };
+
+// Complete appointment with consultation details
+exports.completeAppointmentWithDetails = async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+    const { medicines, notes, followUpDays, followUpReason } = req.body;
+    const doctorId = req.user.id;
+
+    // Verify appointment exists and belongs to doctor
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment || appointment.doctor_id !== doctorId) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found or not authorized'
+      });
+    }
+
+    // Update appointment status to completed
+    await Appointment.updateStatus(appointmentId, 'completed');
+
+    // Import ConsultationDetail model
+    const ConsultationDetail = require('../models/ConsultationDetail');
+
+    // Check if consultation details already exist
+    const existingDetails = await ConsultationDetail.findByAppointmentId(appointmentId);
+
+    let consultationDetails;
+    if (existingDetails) {
+      consultationDetails = await ConsultationDetail.update(appointmentId, {
+        medicines,
+        notes,
+        followUpDays,
+        followUpReason
+      });
+    } else {
+      consultationDetails = await ConsultationDetail.create({
+        appointmentId,
+        doctorId,
+        patientId: appointment.patient_id,
+        medicines,
+        notes,
+        followUpDays,
+        followUpReason
+      });
+    }
+
+    // Send email to patient with consultation details
+    const patient = await require('../models/Patient').findById(appointment.patient_id);
+    if (patient && patient.email) {
+      await require('../services/emailService').sendConsultationDetails(
+        patient.email,
+        patient.name,
+        appointment,
+        consultationDetails
+      );
+    }
+
+    res.json({
+      success: true,
+      message: 'Appointment completed with consultation details',
+      data: consultationDetails
+    });
+  } catch (error) {
+    console.error('Complete appointment error:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Server error'
+    });
+  }
+};
+
+// Get consultation details for an appointment
+exports.getConsultationDetails = async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+    const userId = req.user.id;
+
+    // Verify user has access to this appointment
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Appointment not found'
+      });
+    }
+
+    if (appointment.doctor_id !== userId && appointment.patient_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to view this appointment'
+      });
+    }
+
+    const ConsultationDetail = require('../models/ConsultationDetail');
+    const details = await ConsultationDetail.findByAppointmentId(appointmentId);
+
+    if (!details) {
+      return res.json({
+        success: true,
+        data: null
+      });
+    }
+
+    res.json({
+      success: true,
+      data: details
+    });
+  } catch (error) {
+    console.error('Get consultation details error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};

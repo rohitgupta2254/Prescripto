@@ -12,10 +12,10 @@ class Payment {
 
   static async findByAppointmentId(appointmentId) {
     const [rows] = await db.execute(
-      'SELECT * FROM payments WHERE appointment_id = ?',
+      'SELECT id, appointment_id, amount, payment_method, transaction_id, status, payment_date FROM payments WHERE appointment_id = ?',
       [appointmentId]
     );
-    return rows[0];
+    return rows[0] || null;
   }
 
   static async updateStatus(transactionId, status) {

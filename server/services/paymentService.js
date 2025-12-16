@@ -209,6 +209,32 @@ class PaymentService {
       throw new Error(`Refund failed: ${error.message}`);
     }
   }
+
+  static async refundPayment(transactionId, amountInCents) {
+    try {
+      this.ensureStripe();
+
+      // Create refund for the payment
+      const refund = await stripe.refunds.create({
+        payment_intent: transactionId,
+        amount: amountInCents, // Amount in cents
+      });
+
+      if (refund.status === 'succeeded') {
+        return {
+          success: true,
+          refund_id: refund.id,
+          amount: refund.amount / 100, // Convert back to dollars
+          status: 'succeeded'
+        };
+      }
+
+      throw new Error(`Refund status: ${refund.status}`);
+    } catch (error) {
+      console.error('Stripe refund error:', error);
+      throw new Error(`Payment refund failed: ${error.message}`);
+    }
+  }
 }
 
 module.exports = PaymentService;

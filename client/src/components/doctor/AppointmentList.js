@@ -1,24 +1,37 @@
 import React, { useState } from 'react';
 import { doctorAPI } from '../../services/api';
 import { formatDate, formatTime } from '../../utils/helpers';
+import ConsultationModal from './ConsultationModal';
 import '../../styles/Doctor.css';
 
 const AppointmentList = ({ appointments, onUpdate }) => {
   const [updatingId, setUpdatingId] = useState(null);
   const [error, setError] = useState('');
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [consultationDetails, setConsultationDetails] = useState({});
 
   const handleStatusUpdate = async (appointmentId, newStatus) => {
     setUpdatingId(appointmentId);
     setError('');
 
     try {
-      await doctorAPI.updateAppointmentStatus(appointmentId, newStatus);
-      if (onUpdate) onUpdate();
+      if (newStatus === 'completed') {
+        // Open consultation modal instead of directly updating
+        setSelectedAppointment(appointments.find(a => a.id === appointmentId));
+      } else {
+        await doctorAPI.updateAppointmentStatus(appointmentId, newStatus);
+        if (onUpdate) onUpdate();
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update appointment');
     } finally {
       setUpdatingId(null);
     }
+  };
+
+  const handleConsultationSuccess = () => {
+    if (onUpdate) onUpdate();
+    setSelectedAppointment(null);
   };
 
   const getStatusBadge = (status) => {
@@ -31,6 +44,37 @@ const AppointmentList = ({ appointments, onUpdate }) => {
     
     const config = statusConfig[status] || statusConfig.scheduled;
     return <span className={`status-badge ${config.class}`}>{config.text}</span>;
+  };
+
+  const renderConsultationDetails = (appointment) => {
+    const details = consultationDetails[appointment.id] || appointment.consultationDetails || appointment.consultation_details;
+    if (!details) return null;
+
+    return (
+      <div className="consultation-info">
+        <h4>📋 Consultation Details</h4>
+        <div className="detail-item">
+          <span className="label">Medicines:</span>
+          <div className="medicines-list">
+            {details.medicines ? details.medicines.split('\n').map((m, i) => (
+              <p key={i}>💊 {m}</p>
+            )) : <p>No medicines prescribed</p>}
+          </div>
+        </div>
+        {details.notes && (
+          <div className="detail-item">
+            <span className="label">Notes:</span>
+            <span className="value">{details.notes}</span>
+          </div>
+        )}
+        {details.follow_up_date && (
+          <div className="detail-item">
+            <span className="label">Follow-up:</span>
+            <span className="value">{new Date(details.follow_up_date).toLocaleDateString()} ({details.follow_up_days} days) - {details.follow_up_reason || 'Regular check-up'}</span>
+          </div>
+        )}
+      </div>
+    );
   };
 
   if (appointments.length === 0) {
@@ -72,6 +116,8 @@ const AppointmentList = ({ appointments, onUpdate }) => {
               </div>
             </div>
 
+            {appointment.status === 'completed' && renderConsultationDetails(appointment)}
+
             {appointment.status === 'scheduled' && (
               <div className="appointment-actions">
                 <button
@@ -100,6 +146,14 @@ const AppointmentList = ({ appointments, onUpdate }) => {
           </div>
         ))}
       </div>
+
+      {selectedAppointment && (
+        <ConsultationModal
+          appointment={selectedAppointment}
+          onClose={() => setSelectedAppointment(null)}
+          onSuccess={handleConsultationSuccess}
+        />
+      )}
     </div>
   );
 };

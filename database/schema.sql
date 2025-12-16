@@ -63,8 +63,23 @@ CREATE TABLE payments (
   amount DECIMAL(10, 2) NOT NULL,
   payment_method ENUM('card', 'upi', 'net_banking') DEFAULT 'card',
   transaction_id VARCHAR(255),
-  status ENUM('pending', 'completed', 'failed', 'refunded') DEFAULT 'pending',
+  status ENUM('pending', 'completed', 'failed', 'refunded', 'refund_pending') DEFAULT 'pending',
   payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE
+);
+
+-- Cancellation Requests table
+CREATE TABLE cancellation_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  appointment_id INT NOT NULL,
+  requested_by ENUM('patient', 'doctor') NOT NULL,
+  reason TEXT,
+  status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+  requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  approved_at TIMESTAMP NULL,
+  refund_amount DECIMAL(10, 2),
+  refund_transaction_id VARCHAR(255),
+  notes TEXT,
   FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE
 );
 
@@ -88,7 +103,7 @@ CREATE TABLE email_notifications (
   recipient_email VARCHAR(255) NOT NULL,
   subject VARCHAR(500) NOT NULL,
   content TEXT,
-  type ENUM('appointment_confirmation', 'reminder', 'payment_receipt', 'cancellation'),
+  type ENUM('appointment_confirmation', 'reminder', 'payment_receipt', 'cancellation', 'consultation'),
   status ENUM('pending', 'sent', 'failed') DEFAULT 'pending',
   sent_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -103,4 +118,22 @@ CREATE TABLE appointment_reminders (
   status ENUM('pending', 'sent', 'cancelled') DEFAULT 'pending',
   sent_at TIMESTAMP NULL,
   FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE
+);
+
+-- Consultation Details table (medicines, follow-up, etc.)
+CREATE TABLE consultation_details (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  appointment_id INT NOT NULL,
+  doctor_id INT NOT NULL,
+  patient_id INT NOT NULL,
+  medicines TEXT,
+  notes TEXT,
+  follow_up_days INT,
+  follow_up_date DATE,
+  follow_up_reason VARCHAR(500),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
+  FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE,
+  FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE
 );

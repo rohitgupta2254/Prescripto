@@ -58,6 +58,10 @@ export const doctorAPI = {
   getAppointments: (status) => api.get(`/doctors/appointments?status=${status || ''}`),
   updateAppointmentStatus: (appointmentId, status) => 
     api.put(`/doctors/appointments/${appointmentId}/status`, { status }),
+  completeAppointmentWithDetails: (appointmentId, data) =>
+    api.post(`/doctors/appointments/${appointmentId}/complete`, data),
+  getConsultationDetails: (appointmentId) =>
+    api.get(`/doctors/appointments/${appointmentId}/consultation`),
   addTiming: (data) => api.post('/doctors/timings', data),
   getTimings: () => api.get('/doctors/timings'),
   deleteTiming: (timingId) => api.delete(`/doctors/timings/${timingId}`),
@@ -74,6 +78,9 @@ export const patientAPI = {
   getAppointments: (status) => api.get(`/patients/appointments?status=${status || ''}`),
   cancelAppointment: (appointmentId) => 
     api.put(`/patients/appointments/${appointmentId}/cancel`),
+  requestCancellation: (appointmentId, data) => 
+    api.post(`/appointments/${appointmentId}/request-cancellation`, data),
+  getRefundHistory: () => api.get('/appointments/refund-history'),
   getProfile: () => api.get('/patients/profile'),
   updateProfile: (data) => api.put('/patients/profile', data),
 };
@@ -95,6 +102,15 @@ export const reviewAPI = {
   getPatientReviews: () => api.get('/reviews'),
   updateReview: (reviewId, data) => api.put(`/reviews/${reviewId}`, data),
   deleteReview: (reviewId) => api.delete(`/reviews/${reviewId}`),
+};
+
+// Doctor API - Cancellation Management
+export const doctorCancellationAPI = {
+  getPendingCancellations: () => api.get('/appointments/doctor/pending-cancellations'),
+  approveCancellation: (requestId, data) => api.post(`/appointments/cancellation/${requestId}/approve`, data),
+  rejectCancellation: (requestId, data) => api.post(`/appointments/cancellation/${requestId}/reject`, data),
+  getRevenueSummary: () => api.get('/appointments/doctor/revenue-summary'),
+  cancelAppointmentByDoctor: (appointmentId, data) => api.post(`/appointments/${appointmentId}/cancel-by-doctor`, data),
 };
 
 // Notification API

@@ -264,6 +264,286 @@ class EmailService {
       return false;
     }
   }
+
+  static async sendCancellationRequest(appointment, requestedBy, reason) {
+    const subject = `Appointment Cancellation Request - ${requestedBy === 'patient' ? 'Patient' : 'Doctor'} Initiated`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #e74c3c; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+          .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 5px 5px; }
+          .details { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #e74c3c; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          .alert { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Cancellation Request Received</h1>
+          </div>
+          <div class="content">
+            <p>Dear ${requestedBy === 'patient' ? 'Dr. ' + appointment.doctor_name : appointment.patient_name},</p>
+            <p>A cancellation request has been submitted for the following appointment:</p>
+            
+            <div class="details">
+              <h3>Appointment Details</h3>
+              <p><strong>Date:</strong> ${new Date(appointment.appointment_date).toDateString()}</p>
+              <p><strong>Time:</strong> ${appointment.appointment_time}</p>
+              <p><strong>Patient:</strong> ${appointment.patient_name}</p>
+              <p><strong>Doctor:</strong> Dr. ${appointment.doctor_name}</p>
+              <p><strong>Reason:</strong> ${reason || 'Not specified'}</p>
+            </div>
+
+            ${requestedBy === 'patient' ? `
+              <div class="alert">
+                <strong>Action Required:</strong> Please review this cancellation request and approve or reject it in your dashboard.
+              </div>
+            ` : ''}
+            
+            <p>Best regards,<br><strong>Prescripto Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const recipient = requestedBy === 'patient' ? appointment.doctor_email : appointment.patient_email;
+    await this.sendEmail(recipient, subject, html, 'cancellation');
+  }
+
+  static async sendCancellationApproved(appointment, refundAmount) {
+    const subject = `Appointment Cancelled - Refund Approved`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #27ae60; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+          .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 5px 5px; }
+          .details { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #27ae60; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+          .success { background: #d4edda; border: 1px solid #28a745; padding: 15px; border-radius: 5px; margin: 15px 0; color: #155724; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Cancellation Approved ✓</h1>
+          </div>
+          <div class="content">
+            <p>Dear ${appointment.patient_name},</p>
+            <p>Your cancellation request has been approved by Dr. ${appointment.doctor_name}.</p>
+            
+            <div class="details">
+              <h3>Cancellation Details</h3>
+              <p><strong>Appointment Date:</strong> ${new Date(appointment.appointment_date).toDateString()}</p>
+              <p><strong>Appointment Time:</strong> ${appointment.appointment_time}</p>
+              <p><strong>Doctor:</strong> Dr. ${appointment.doctor_name}</p>
+            </div>
+
+            <div class="success">
+              <strong>Refund Information:</strong><br>
+              Refund amount of <strong>$${refundAmount.toFixed(2)}</strong> has been initiated to your original payment method. 
+              Please allow 3-5 business days for the refund to appear in your account.
+            </div>
+            
+            <p>Thank you for using Prescripto. We hope to serve you again in the future.</p>
+            
+            <p>Best regards,<br><strong>Prescripto Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    await this.sendEmail(appointment.patient_email, subject, html, 'cancellation');
+  }
+
+  static async sendCancellationRejected(appointment, reason) {
+    const subject = `Cancellation Request Rejected`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #c0392b; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+          .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 5px 5px; }
+          .details { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #c0392b; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Cancellation Request Rejected</h1>
+          </div>
+          <div class="content">
+            <p>Dear ${appointment.patient_name},</p>
+            <p>Unfortunately, your cancellation request has been rejected by Dr. ${appointment.doctor_name}.</p>
+            
+            <div class="details">
+              <h3>Appointment Details</h3>
+              <p><strong>Date:</strong> ${new Date(appointment.appointment_date).toDateString()}</p>
+              <p><strong>Time:</strong> ${appointment.appointment_time}</p>
+              <p><strong>Doctor:</strong> Dr. ${appointment.doctor_name}</p>
+              ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+            </div>
+
+            <p>Your appointment remains scheduled as originally planned. If you have any questions, please contact the doctor directly.</p>
+            
+            <p>Best regards,<br><strong>Prescripto Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    await this.sendEmail(appointment.patient_email, subject, html, 'cancellation');
+  }
+
+  static async sendCancellationNotification(appointment, cancelledBy, reason) {
+    const subject = `Appointment Cancelled by Doctor`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #e67e22; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+          .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 5px 5px; }
+          .details { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #e67e22; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Appointment Cancelled</h1>
+          </div>
+          <div class="content">
+            <p>Dear ${appointment.patient_name},</p>
+            <p>We regret to inform you that your appointment has been cancelled by Dr. ${appointment.doctor_name}.</p>
+            
+            <div class="details">
+              <h3>Cancelled Appointment Details</h3>
+              <p><strong>Date:</strong> ${new Date(appointment.appointment_date).toDateString()}</p>
+              <p><strong>Time:</strong> ${appointment.appointment_time}</p>
+              <p><strong>Doctor:</strong> Dr. ${appointment.doctor_name}</p>
+              ${reason ? `<p><strong>Reason:</strong> ${reason}</p>` : ''}
+            </div>
+
+            <p><strong>Full refund of $${appointment.fees} has been initiated to your original payment method.</strong> 
+            Please allow 3-5 business days for the refund to appear in your account.</p>
+
+            <p>Please reschedule your appointment at your earliest convenience. If you have any questions, please contact us.</p>
+            
+            <p>Best regards,<br><strong>Prescripto Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    await this.sendEmail(appointment.patient_email, subject, html, 'cancellation');
+  }
+
+  static async sendConsultationDetails(patientEmail, patientName, appointment, consultationDetails) {
+    const subject = `Consultation Summary - Dr. Appointment Complete`;
+    
+    const medicinesList = consultationDetails.medicines ? 
+      consultationDetails.medicines.split('\n').map(m => `<li>${m}</li>`).join('') : 
+      '<li>No medicines prescribed</li>';
+
+    const followUpInfo = consultationDetails.follow_up_date ? 
+      `<p><strong>Follow-up Date:</strong> ${new Date(consultationDetails.follow_up_date).toDateString()}</p>
+       <p><strong>Days:</strong> ${consultationDetails.follow_up_days} days from today</p>
+       ${consultationDetails.follow_up_reason ? `<p><strong>Follow-up Reason:</strong> ${consultationDetails.follow_up_reason}</p>` : ''}` :
+      '<p>No follow-up appointment scheduled.</p>';
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #27ae60; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+          .content { background: #f9f9f9; padding: 20px; border-radius: 0 0 5px 5px; }
+          .section { background: white; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #27ae60; }
+          .medicines-list { list-style-type: none; padding: 0; }
+          .medicines-list li { padding: 8px; background: #ecf0f1; margin: 5px 0; border-radius: 3px; }
+          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Consultation Complete ✓</h1>
+          </div>
+          <div class="content">
+            <p>Dear <strong>${patientName}</strong>,</p>
+            <p>Thank you for visiting us. Here's a summary of your consultation:</p>
+            
+            <div class="section">
+              <h3>Appointment Details</h3>
+              <p><strong>Date:</strong> ${new Date(appointment.appointment_date).toDateString()}</p>
+              <p><strong>Time:</strong> ${appointment.appointment_time}</p>
+              <p><strong>Status:</strong> Completed ✓</p>
+            </div>
+
+            <div class="section">
+              <h3>Prescribed Medicines</h3>
+              <ul class="medicines-list">
+                ${medicinesList}
+              </ul>
+            </div>
+
+            <div class="section">
+              <h3>Doctor's Notes</h3>
+              <p>${consultationDetails.notes || 'No additional notes provided'}</p>
+            </div>
+
+            <div class="section">
+              <h3>Follow-up Appointment</h3>
+              ${followUpInfo}
+            </div>
+
+            <p>If you have any questions or concerns, please don't hesitate to contact us.</p>
+            
+            <p>Best regards,<br><strong>Prescripto Team</strong></p>
+          </div>
+          <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    await this.sendEmail(patientEmail, subject, html, 'consultation');
+  }
 }
 
 module.exports = EmailService;

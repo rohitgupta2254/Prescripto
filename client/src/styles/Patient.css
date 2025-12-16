@@ -465,6 +465,59 @@
   gap: 0.75rem;
   align-items: center;
   flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.action-group {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex: 1;
+}
+
+.btn-cancel-appointment {
+  background-color: #e74c3c !important;
+  color: white !important;
+  border: 2px solid #c0392b !important;
+  padding: 0.75rem 1.5rem !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3) !important;
+}
+
+.btn-cancel-appointment:hover {
+  background-color: #c0392b !important;
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+.btn-cancel-appointment:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3) !important;
+}
+
+.cancel-info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+  color: #856404;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  border: 2px solid #ffc107;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.cancel-icon {
+  font-size: 1.1rem;
+}
+
+.cancel-text {
+  display: inline-block;
 }
 
 .cancel-disabled {
@@ -617,4 +670,100 @@
 
 .profile-form {
   padding: 2rem;
+}
+
+/* Consultation Details Section */
+.consultation-details-section {
+  background: linear-gradient(135deg, #f0f9ff 0%, #f0fff4 100%);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  border-left: 4px solid #27ae60;
+}
+
+.consultation-details-section h4 {
+  margin: 0 0 1rem 0;
+  color: #27ae60;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.medicines-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.medicine-item {
+  background: white;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border-left: 3px solid #27ae60;
+  color: #333;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.follow-up-section {
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 3px solid #3498db;
+  margin-top: 0.5rem;
+}
+
+.follow-up-section p {
+  margin: 0.5rem 0;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.follow-up-section p strong {
+  color: #2c3e50;
+  margin-right: 0.5rem;
+}
+
+/* Mobile Responsive - Cancel Button */
+@media (max-width: 768px) {
+  .appointment-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .action-group {
+    width: 100%;
+  }
+
+  .btn-cancel-appointment {
+    width: 100% !important;
+    padding: 0.65rem 1.25rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  .cancel-info-badge {
+    width: 100%;
+    justify-content: center;
+    padding: 0.65rem 1rem;
+  }
+
+  .consultation-details-section {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .medicine-item {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .follow-up-section {
+    padding: 0.75rem;
+  }
+
+  .follow-up-section p {
+    font-size: 0.85rem;
+    margin: 0.35rem 0;
+  }
 }
