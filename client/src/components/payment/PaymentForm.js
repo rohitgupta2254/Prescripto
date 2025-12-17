@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { paymentAPI } from '../../services/api';
+import { paymentAPI, patientAPI } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
 import '../../styles/Payment.css';
 
@@ -20,32 +20,37 @@ const CheckoutForm = ({ appointment, doctor, onSuccess, onCancel }) => {
     setLoading(true);
     setError('');
 
-    // If UPI selected, call backend UPI endpoint to mark payment completed (test)
-    if (paymentMethod === 'upi') {
-      try {
-        // Use our UPI testing endpoint — expects appointment id, amount and upiId
-        await paymentAPI.payWithUPI({ appointmentId: appointment.id, amount: doctor.fees, upiId });
+    try {
+      // If UPI selected, call backend UPI endpoint
+      if (paymentMethod === 'upi') {
+        // First create the appointment
+        const appointmentResponse = await patientAPI.bookAppointment(appointment);
+        const createdAppointment = appointmentResponse.data.data;
+
+        // Then process UPI payment
+        await paymentAPI.payWithUPI({
+          appointmentId: createdAppointment.id,
+          amount: doctor.fees,
+          upiId
+        });
         onSuccess();
-      } catch (err) {
-        setError(err.response?.data?.message || 'UPI payment failed.');
-      } finally {
-        setLoading(false);
+        return;
       }
 
-      return;
-    }
+      // For card payments ensure Stripe is ready
+      if (!stripe || !elements) {
+        setError('Payment gateway not ready. Please try again in a moment.');
+        setLoading(false);
+        return;
+      }
 
-    // For card payments ensure Stripe is ready
-    if (!stripe || !elements) {
-      setError('Payment gateway not ready. Please try again in a moment.');
-      setLoading(false);
-      return;
-    }
+      // First create the appointment
+      const appointmentResponse = await patientAPI.bookAppointment(appointment);
+      const createdAppointment = appointmentResponse.data.data;
 
-    try {
-      // Create payment intent
+      // Create payment intent with the created appointment ID
       const paymentResponse = await paymentAPI.createPaymentIntent({
-        appointmentId: appointment.id,
+        appointmentId: createdAppointment.id,
         amount: doctor.fees
       });
 
@@ -56,7 +61,7 @@ const CheckoutForm = ({ appointment, doctor, onSuccess, onCancel }) => {
         payment_method: {
           card: elements.getElement(CardElement),
           billing_details: {
-            name: appointment.patient_name,
+            name: createdAppointment.patient_name,
           },
         }
       });
@@ -67,9 +72,9 @@ const CheckoutForm = ({ appointment, doctor, onSuccess, onCancel }) => {
         // Payment successful - confirm with our backend
         await paymentAPI.confirmPayment({
           paymentIntentId,
-          appointmentId: appointment.id
+          appointmentId: createdAppointment.id
         });
-        
+
         onSuccess();
       }
     } catch (err) {
@@ -99,6 +104,10 @@ const CheckoutForm = ({ appointment, doctor, onSuccess, onCancel }) => {
         <div className="summary-item">
           <span>Time:</span>
           <span>{appointment.appointment_time}</span>
+        </div>
+        <div className="summary-item">
+          <span>Type:</span>
+          <span>{appointment.consultation_type === 'in_person' ? 'In-Person' : 'Video Consultation'}</span>
         </div>
         <div className="summary-item total">
           <span>Total Amount:</span>

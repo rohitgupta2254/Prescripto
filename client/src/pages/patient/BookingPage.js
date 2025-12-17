@@ -31,8 +31,10 @@ const BookingPage = () => {
     }
   };
 
-  const handleBookingSuccess = (bookedAppointment) => {
-    setAppointment(bookedAppointment);
+  const handleBookingSuccess = (appointmentData) => {
+    // Store appointment details but don't create it yet
+    // appointmentData contains the form data (date, time, symptoms, etc.)
+    setAppointment(appointmentData);
     setStep('payment');
   };
 
@@ -46,6 +48,7 @@ const BookingPage = () => {
 
   const handlePaymentCancel = () => {
     setStep('booking');
+    setAppointment(null);
   };
 
   if (loading) {

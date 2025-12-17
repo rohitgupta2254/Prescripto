@@ -131,32 +131,15 @@ const AppointmentBooking = ({ doctor, onBookingSuccess }) => {
       return;
     }
 
-    setBooking(true);
     setError('');
 
-    try {
-      const response = await patientAPI.bookAppointment({
+    // Pass appointment details to parent (don't create appointment yet)
+    // Payment will be processed first, then appointment created on success
+    if (onBookingSuccess) {
+      onBookingSuccess({
         doctorId: doctor.id,
         ...formData
       });
-
-      if (onBookingSuccess) {
-        onBookingSuccess(response.data.data);
-      }
-
-      // Clear form after successful booking
-      setFormData({
-        appointment_date: '',
-        appointment_time: '',
-        consultation_type: CONSULTATION_TYPES.IN_PERSON,
-        symptoms: ''
-      });
-      setSelectedDate(null);
-      setAvailableSlots([]);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to book appointment');
-    } finally {
-      setBooking(false);
     }
   };
 
@@ -261,15 +244,10 @@ const AppointmentBooking = ({ doctor, onBookingSuccess }) => {
         <div className="booking-actions">
           <button 
             type="submit" 
-            disabled={booking || !formData.appointment_time}
+            disabled={!formData.appointment_time}
             className="btn btn-primary btn-large btn-no-shift"
           >
-            <span className="btn-label" style={{ visibility: booking ? 'hidden' : 'visible' }}>{`Book Appointment - $${doctor.fees}`}</span>
-            {booking && (
-              <div className="btn-spinner">
-                <LoadingSpinner size="small" text="" />
-              </div>
-            )}
+            <span className="btn-label">{`Proceed to Payment - $${doctor.fees}`}</span>
           </button>
         </div>
       </form>

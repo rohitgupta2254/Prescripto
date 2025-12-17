@@ -38,7 +38,7 @@ class Appointment {
       params.push(status);
     }
 
-    query += ' ORDER BY a.appointment_date DESC, a.appointment_time DESC';
+    query += ' ORDER BY a.appointment_date ASC, a.appointment_time ASC';
 
     const [rows] = await db.execute(query, params);
     return rows;
@@ -59,7 +59,7 @@ class Appointment {
       params.push(status);
     }
 
-    query += ' ORDER BY a.appointment_date DESC, a.appointment_time DESC';
+    query += ' ORDER BY a.appointment_date Asc, a.appointment_time Asc';
 
     const [rows] = await db.execute(query, params);
     return rows;
